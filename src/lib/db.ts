@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
-export const connectDB = async (): Promise<void> => {
+import { ENV } from "./env";
+
+const connectDB = async (): Promise<void> => {
   try {
-    const mongouri = process.env.MONGO_URI;
+    const mongouri = ENV.MONGODB_URI;
     if (!mongouri) {
       throw new Error("MONGO_URI is not defined");
     }
@@ -12,4 +14,4 @@ export const connectDB = async (): Promise<void> => {
     process.exit(1);
   }
 };
-export default mongoose;
+export default connectDB;
