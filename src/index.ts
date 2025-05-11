@@ -11,6 +11,7 @@ import "./middleware/passport";
 import { ENV } from "./lib/env";
 
 const app = express();
+app.set("trust proxy", true);
 app.use(cookieParser());
 app.use(express.json());
 app.use(passport.initialize());

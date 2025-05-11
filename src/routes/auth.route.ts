@@ -1,4 +1,4 @@
-import Router from "express";
+import { Router } from "express";
 const authRouter = Router();
 import {
   signup,
@@ -10,11 +10,12 @@ import {
   githubAuth,
   githubAuthCallback,
 } from "../controllers/auth.controller";
+import authenticateuser from "../middleware/auth.middleware";
 
 authRouter.post("/signup", signup);
 authRouter.post("/login", login);
 authRouter.post("/logout", logout);
-authRouter.get("/me", getMe);
+authRouter.get("/me", authenticateuser, getMe);
 authRouter.get("/google", googleAuth);
 authRouter.get("/google/callback", googleAuthCallback);
 authRouter.get("/github", githubAuth);
