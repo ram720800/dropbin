@@ -1,4 +1,4 @@
-import { Schema, model, Document, Types } from "mongoose";
+import { Schema, model, Document, Types, Mongoose } from "mongoose";
 import { customAlphabet } from "nanoid";
 
 const nanoid = customAlphabet("1234567890abcdefghijklmnopqrstuvwxyz", 10);
@@ -19,11 +19,8 @@ export interface IBin extends Document {
       | "instagram"
       | "website"
       | "other";
-    metadata?: {
-      title?: string;
-      description?: string;
-      image?: string;
-    };
+    data?: Record<string, any>;
+    fetchedAt: Date;
   }[];
   isShared: boolean;
   views?: number;
@@ -53,11 +50,8 @@ const binSchema = new Schema<IBin>(
           ],
           default: "other",
         },
-        metadata: {
-          title: String,
-          description: String,
-          image: String,
-        },
+        data: Schema.Types.Mixed,
+        fetchedAt: { type: Date, default: Date.now },
       },
     ],
     isShared: { type: Boolean, default: false },

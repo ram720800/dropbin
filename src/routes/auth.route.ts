@@ -7,8 +7,8 @@ import {
   getMe,
   googleAuth,
   googleAuthCallback,
-  githubAuth,
-  githubAuthCallback,
+  connectGithub,
+  githubCallback,
 } from "../controllers/auth.controller";
 import authenticateuser from "../middleware/auth.middleware";
 
@@ -18,7 +18,7 @@ authRouter.post("/logout", logout);
 authRouter.get("/me", authenticateuser, getMe);
 authRouter.get("/google", googleAuth);
 authRouter.get("/google/callback", googleAuthCallback);
-authRouter.get("/github", githubAuth);
-authRouter.get("/github/callback", githubAuthCallback);
+authRouter.get("/github/connect", authenticateuser, connectGithub);
+authRouter.get("/github/callback", githubCallback);
 
 export default authRouter;

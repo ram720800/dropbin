@@ -1,18 +1,35 @@
-import { Schema, model, Document,Types } from "mongoose";
+import { Schema, model, Document, Types } from "mongoose";
+
+export interface IToken {
+  provider: "google" | "github" | "spotify" | "X" | "youtube";
+  accessToken: string;
+  refreshToken?: string;
+  createdAt: Date;
+}
 
 export interface IUser extends Document {
-  _id:Types.ObjectId,
+  _id: Types.ObjectId;
   email: string;
   password?: string;
   name: string;
   profilePic?: string;
-  authProvider: "local" | "google" | "github";
+  authProvider: "local" | "google";
   googleId?: string;
   githubId?: string;
-  accountLinked?: boolean;
-  previousProvider?: string;
+  tokens?: IToken[];
   createdAt: Date;
 }
+
+const tokenSchema = new Schema<IToken>({
+  provider: {
+    type: String,
+    enum: ["google", "github", "spotify", "X", "youtube"],
+    required: true,
+  },
+  accessToken: { type: String, required: true },
+  refreshToken: { type: String },
+  createdAt: { type: Date, default: Date.now },
+});
 
 const userSchema = new Schema<IUser>(
   {
@@ -38,17 +55,17 @@ const userSchema = new Schema<IUser>(
       minlength: [7, "Password must be at least 7 characters long"],
       select: false,
     },
-    name: { type: String, required:true},
+    name: { type: String, required: true },
     profilePic: { type: String },
     googleId: { type: String },
     githubId: { type: String },
     authProvider: {
       type: String,
-      enum: ["local", "github", "google"],
+      enum: ["local", "google"],
       required: true,
     },
-    accountLinked: { type: Boolean, default: false },
-    previousProvider: { type: String },
+    tokens: { type: [tokenSchema], default: [] },
+    
   },
   {
     timestamps: true,
