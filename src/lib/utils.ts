@@ -29,12 +29,16 @@ export const upsertToken = async (
   user: IUser,
   provider: IToken["provider"],
   accessToken: string,
-  refreshToken?: string
+  refreshToken?: string,
+  expiresIn?: number,
+  issuedAt?: Date
 ): Promise<void> => {
   const newToken: IToken = {
     provider,
     accessToken,
     refreshToken,
+    expiresIn,
+    issuedAt,
     createdAt: new Date(),
   };
 

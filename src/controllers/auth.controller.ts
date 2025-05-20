@@ -226,3 +226,121 @@ export const githubCallback = async (
     }
   )(req, res, next);
 };
+
+export const disconnectGithub = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = (req.user as { _id: string })._id;
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    user.githubId = undefined;
+    user.tokens = user.tokens?.filter((token) => token.provider !== "github");
+    await user.save();
+    res
+      .status(200)
+      .json({ message: "GitHub account disconnected successfully" });
+    return;
+  } catch (error) {
+    errorHandler(res, error);
+  }
+};
+
+export const connectSpotify = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const userId = req.user as { _id: string } | undefined;
+
+  if (!userId) {
+    res.status(401).json({ error: "Not Logged In" });
+    return;
+  }
+
+  const clientIP =
+    req.headers["x-forwarded-for"]?.toString().split(",")[0].trim() ||
+    req.socket?.remoteAddress ||
+    "unknown";
+
+  if (!checkRateLimit(clientIP)) {
+    res
+      .status(429)
+      .json({ error: "Too many requests. Please try again later." });
+    return;
+  }
+
+  const state = encodeState(userId._id.toString());
+  passport.authenticate("spotify", {
+    scope: ["user-read-email", "user-read-private"],
+    state,
+  })(req, res, next);
+};
+
+export const spotifyCallback = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const rawState = req.query.state;
+
+  if (!rawState || typeof rawState !== "string") {
+    return res.redirect(`${ENV.CLIENT_URL}/settings?error=MissingState`);
+  }
+
+  let decoded;
+  try {
+    decoded = decodeState(rawState);
+  } catch (error) {
+    return res.redirect(`${ENV.CLIENT_URL}/settings?error=InvalidState`);
+  }
+
+  passport.authenticate(
+    "spotify",
+    { session: false },
+    async (err: any, spotifyProfile: any) => {
+      if (err || !spotifyProfile) {
+        console.log(`OAutherror: ${err}`);
+        return res.redirect(`${ENV.CLIENT_URL}/settings?error=OAuth Failed`);
+      }
+      try {
+        const user = await User.findById(decoded.userId);
+
+        if (!user) {
+          return res.redirect(`${ENV.CLIENT_URL}/settings?error=UserNotFound`);
+        }
+
+        try {
+          await checkAlreadyLinked(
+            "spotify",
+            spotifyProfile.id,
+            user._id.toString()
+          );
+
+          user.spotifyId = spotifyProfile.id;
+          upsertToken(
+            user,
+            "spotify",
+            spotifyProfile.accessToken,
+            spotifyProfile.refreshToken,
+            spotifyProfile.expiresIn,
+            spotifyProfile.issuedAt
+          );
+          await user.save();
+          return res.redirect(`${ENV.CLIENT_URL}/settings?linked=spotify`);
+        } catch (error) {
+          return res.redirect(`${ENV.CLIENT_URL}/settings?error=AlreadyLinked`);
+        }
+      } catch (error) {
+        return res.redirect(`${ENV.CLIENT_URL}/settings?error=ServerError`);
+      }
+    }
+  )(req, res, next);
+};
+
+export const disconnectSpotify = async () => {};

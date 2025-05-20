@@ -4,7 +4,10 @@ export interface IToken {
   provider: "google" | "github" | "spotify" | "X" | "youtube";
   accessToken: string;
   refreshToken?: string;
+  expiresIn?: number;
+  issuedAt?: Date;
   createdAt: Date;
+  updatedAt?: Date;
 }
 
 export interface IUser extends Document {
@@ -16,6 +19,7 @@ export interface IUser extends Document {
   authProvider: "local" | "google";
   googleId?: string;
   githubId?: string;
+  spotifyId?: string;
   tokens?: IToken[];
   createdAt: Date;
 }
@@ -28,7 +32,10 @@ const tokenSchema = new Schema<IToken>({
   },
   accessToken: { type: String, required: true },
   refreshToken: { type: String },
+  expiresIn: { type: Number },
+  issuedAt: { type: Date },
   createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 const userSchema = new Schema<IUser>(
@@ -59,13 +66,13 @@ const userSchema = new Schema<IUser>(
     profilePic: { type: String },
     googleId: { type: String },
     githubId: { type: String },
+    spotifyId: { type: String },
     authProvider: {
       type: String,
       enum: ["local", "google"],
       required: true,
     },
     tokens: { type: [tokenSchema], default: [] },
-    
   },
   {
     timestamps: true,

@@ -4,6 +4,8 @@ import {
   VerifyCallback,
 } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
+import { Strategy as SpotifyStrategy } from "passport-spotify";
+import { Request } from "express";
 import User from "../models/user.model";
 import { ENV } from "../lib/env";
 import { upsertToken } from "../lib/utils";
@@ -13,7 +15,7 @@ passport.use(
     {
       clientID: ENV.GOOGLE_CLIENT_ID!,
       clientSecret: ENV.GOOGLE_CLIENT_SECRET!,
-      callbackURL: "/api/v1/auth/google/callback",
+      callbackURL: `${ENV.BASE_URL}/api/v1/auth/google/callback`,
     },
     async (
       _accessToken: string,
@@ -55,7 +57,7 @@ passport.use(
         });
 
         // lets update and insert the google token
-        upsertToken(newUser, "google", _accessToken, _refreshToken);
+        await upsertToken(newUser, "google", _accessToken, _refreshToken);
 
         await newUser.save();
         done(null, newUser);
@@ -71,11 +73,12 @@ passport.use(
     {
       clientID: ENV.GITHUB_CLIENT_ID!,
       clientSecret: ENV.GITHUB_CLIENT_SECRET!,
-      callbackURL: "/api/v1/auth/github/callback",
-      passReqToCallback: false,
+      callbackURL: `${ENV.BASE_URL}/api/v1/auth/github/callback`,
+      passReqToCallback: true,
       scope: ["user:email"],
     },
     async (
+      _req: Request,
       _accessToken: string,
       _refreshToken: string,
       profile: any,
@@ -93,6 +96,39 @@ passport.use(
           refreshToken: _refreshToken,
         };
         done(null, githubProfile);
+      } catch (error) {
+        done(error, undefined);
+      }
+    }
+  )
+);
+
+passport.use(
+  new SpotifyStrategy(
+    {
+      clientID: ENV.SPOTIFY_CLIENT_ID!,
+      clientSecret: ENV.SPOTIFY_CLIENT_SECRET!,
+      callbackURL: `${ENV.BASE_URL}/api/v1/auth/spotify/callback`,
+      passReqToCallback: true,
+    },
+    async (
+      _req: Request,
+      _accesstoken: string,
+      _refreshToken: string,
+      expires_in: number,
+      profile: any,
+      done: Function
+    ) => {
+      try {
+        const spotifyProfile = {
+          id: profile.id,
+          displayName: profile.displayName,
+          accessToken: _accesstoken,
+          refreshToken: _refreshToken,
+          expiresIn: expires_in,
+          issueAt: Date.now(),
+        };
+        done(null, spotifyProfile);
       } catch (error) {
         done(error, undefined);
       }

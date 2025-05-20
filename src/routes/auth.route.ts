@@ -9,6 +9,10 @@ import {
   googleAuthCallback,
   connectGithub,
   githubCallback,
+  disconnectGithub,
+  connectSpotify,
+  spotifyCallback,
+  disconnectSpotify,
 } from "../controllers/auth.controller";
 import authenticateuser from "../middleware/auth.middleware";
 
@@ -20,5 +24,9 @@ authRouter.get("/google", googleAuth);
 authRouter.get("/google/callback", googleAuthCallback);
 authRouter.get("/github/connect", authenticateuser, connectGithub);
 authRouter.get("/github/callback", githubCallback);
+authRouter.delete("/github/disconnect", authenticateuser, disconnectGithub);
+authRouter.get("/spotify/connect", authenticateuser, connectSpotify);
+authRouter.get("/spotify/callback", spotifyCallback);
+authRouter.delete("/spotify/disconnect", authenticateuser, disconnectSpotify);
 
 export default authRouter;

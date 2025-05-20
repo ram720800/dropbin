@@ -6,10 +6,13 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(1),
   NODE_ENV: z.enum(["development", "production"]).default("development"),
   CLIENT_URL: z.string().url(),
+  BASE_URL: z.string().url(),
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
   GITHUB_CLIENT_ID: z.string().min(1),
   GITHUB_CLIENT_SECRET: z.string().min(1),
+  SPOTIFY_CLIENT_ID: z.string().min(1),
+  SPOTIFY_CLIENT_SECRET: z.string().min(1),
 });
 
 const env = envSchema.safeParse(process.env);
